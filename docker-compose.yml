@@ -18,6 +18,8 @@ services:
       - .env
     command:
       ['start', '8000']
+    links:
+      - db:db
 
   db:
     image: postgres:13
@@ -32,3 +34,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+networks:
+  default:
+    external:
+      name: common
+  common:
+    driver: bridge

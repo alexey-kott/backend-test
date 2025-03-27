@@ -1,7 +1,11 @@
-ARG ENVIRONMENT="dev"
+ARG ENVIRONMENT="prod"
 ARG PYTHON_VERSION="3.12"
 ARG PORT=8000
-FROM python:${PYTHON_VERSION}
+FROM python:${PYTHON_VERSION}-alpine AS builder
+
+RUN apk update && \
+    apk add musl-dev libpq-dev gcc
+
 
 WORKDIR /src
 
@@ -15,6 +19,7 @@ RUN if [ "$ENVIRONMENT" = "prod" ]; then poetry install --no-dev; else poetry in
     && rm -rf ~/.cache/pypoetry/cache \
     && rm -rf ~/.cache/pypoetry/artifacts
 
+RUN poetry add psycopg2
 
 COPY . .
 
@@ -24,4 +29,5 @@ RUN mv .env.example .env
 EXPOSE $PORT
 
 RUN poetry run yoyo apply migrations/
-RUN uvicorn src.app:app  --port $PORT
+
+ENTRYPOINT [ "/src/docker-entrypoint.sh" ]
